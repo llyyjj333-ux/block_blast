@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>星运消除师 · Block Blast 星座版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #f9e4b7 0%, #f8d5a3 30%, #f0b8a8 70%, #d9a0c0 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .game-container {
+            max-width: 520px;
+            width: 100%;
+            background: rgba(255, 248, 235, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 24px 20px 28px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .zodiac-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 4px 12px 4px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .zodiac-selector label {
+            color: #5a4a3a;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .zodiac-selector select {
+            background: transparent;
+            border: none;
+            color: #3a2a1a;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 6px 4px;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .share-btn {
+            background: rgba(255, 215, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            color: #7a5a20;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(4px);
+        }
+
+        .share-btn:hover {
+            background: rgba(255, 215, 0, 0.5);
+            transform: scale(1.02);
+        }
+        .share-btn:active {
+            transform: scale(0.94);
+        }
+
+        .fortune-panel {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(6px);
+            border-radius: 28px;
+            padding: 14px 16px 10px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+        }
+
+        .fortune-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .fortune-card {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 16px;
+            padding: 8px 4px;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .fortune-card .crystal-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #4a3a2a;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .fortune-card .collect-count {
+            font-size: 14px;
+            font-weight: 800;
+            color: #c0792a;
+            background: rgba(255, 215, 0, 0.15);
+            padding: 0 8px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .board-wrapper {
+            position: relative;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+            border-radius: 32px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        canvas#gameCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 480 / 580;
+            background: #f5efe8;
+            border-radius: 24px;
+            touch-action: none;
+            cursor: pointer;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .bottom-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .bottom-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .score-display {
+            color: #5a4a3a;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .score-display span {
+            color: #3a2a1a;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #4a3a2a;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(4px);
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+        .tool-btn:active {
+            transform: scale(0.94);
+        }
+
+        .tool-btn.active {
+            background: rgba(255, 215, 0, 0.4);
+            border-color: #f5b342;
+            box-shadow: 0 0 12px rgba(245, 179, 66, 0.3);
+        }
+
+        .tool-count {
+            font-size: 12px;
+            color: #6a5a4a;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 0 8px;
+            border-radius: 20px;
+        }
+
+        .reset-btn {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #4a3a2a;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s;
+            backdrop-filter: blur(4px);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+        .reset-btn:active {
+            transform: scale(0.94);
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff9ed;
+            border-radius: 40px;
+            padding: 32px 28px;
+            max-width: 400px;
+            width: 92%;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-box h2 {
+            color: #3a2a1a;
+            font-size: 24px;
+            margin: 0 0 4px;
+            font-weight: 800;
+        }
+
+        .modal-box .sub {
+            color: #7a6a5a;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .modal-box .sub strong {
+            color: #d48a2a;
+        }
+
+        .modal-box .fortune-list {
+            text-align: left;
+            margin: 8px 0 20px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .modal-box .fortune-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .modal-box .fortune-list li:last-child {
+            border-bottom: none;
+        }
+
+        .modal-box .fortune-list li .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-box .fortune-list li .crystal-name {
+            font-weight: 700;
+            color: #3a2a1a;
+            font-size: 15px;
+        }
+
+        .modal-box .fortune-list li .stars {
+            color: #f5b342;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        .modal-box .fortune-list li .stars .empty {
+            color: #d0c8b8;
+        }
+
+        .modal-box .fortune-list li .desc {
+            font-size: 13px;
+            color: #6a5a4a;
+            line-height: 1.4;
+        }
+
+        .modal-box .fortune-list li .upgrade {
+            font-size: 12px;
+            color: #c0792a;
+            font-weight: 700;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .modal-actions button {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #4a3a2a;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .modal-actions button:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .modal-actions button.primary {
+            background: #f5b342;
+            color: #fff;
+            border-color: #f5b342;
+        }
+
+        .modal-actions button.primary:hover {
+            background: #e69e2e;
+        }
+
+        .ad-wait {
+            margin: 12px 0;
+            padding: 16px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 20px;
+            border: 1px dashed #f5b342;
+        }
+
+        .ad-wait .countdown {
+            font-size: 28px;
+            font-weight: 800;
+            color: #d48a2a;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 16px 12px 20px;
+            }
+            .fortune-grid {
+                gap: 3px;
+            }
+            .fortune-card {
+                padding: 6px 2px;
+            }
+            .fortune-card .crystal-name {
+                font-size: 10px;
+            }
+            .fortune-card .collect-count {
+                font-size: 12px;
+                padding: 0 6px;
+            }
+            .bottom-bar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 6px;
+            }
+            .bottom-left {
+                justify-content: center;
+                gap: 6px;
+            }
+            .reset-btn {
+                width: 100%;
+                text-align: center;
+            }
+            .modal-box {
+                padding: 24px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="header">
+            <div class="zodiac-selector">
+                <label>♈ 星座</label>
+                <select id="zodiacSelect">
+                    <option value="白羊">白羊</option>
+                    <option value="金牛">金牛</option>
+                    <option value="双子" selected>双子</option>
+                    <option value="巨蟹">巨蟹</option>
+                    <option value="狮子">狮子</option>
+                    <option value="处女">处女</option>
+                    <option value="天秤">天秤</option>
+                    <option value="天蝎">天蝎</option>
+                    <option value="射手">射手</option>
+                    <option value="摩羯">摩羯</option>
+                    <option value="水瓶">水瓶</option>
+                    <option value="双鱼">双鱼</option>
+                </select>
+            </div>
+            <div class="header-actions">
+                <button class="share-btn" id="shareBtn">🌟 今日运势</button>
+            </div>
+        </div>
+
+        <div class="fortune-panel">
+            <div class="fortune-grid" id="fortuneGrid"></div>
+        </div>
+
+        <div class="board-wrapper">
+            <canvas id="gameCanvas" width="480" height="580"></canvas>
+        </div>
+
+        <div class="bottom-bar">
+            <div class="bottom-left">
+                <div class="score-display">✨ 得分 <span id="scoreDisplay">0</span></div>
+                <button class="tool-btn" id="rotateBtn">🔄 旋转</button>
+                <span class="tool-count" id="rotateCountDisplay">剩余 3 次</span>
+                <button class="tool-btn" id="bombBtn">💣 炸弹</button>
+                <span class="tool-count" id="bombCountDisplay">剩余 1 次</span>
+            </div>
+            <button class="reset-btn" id="resetBtn">⟳ 重开</button>
+        </div>
+    </div>
+
+    <!-- 今日运势模态框 -->
+    <div class="modal-overlay" id="shareModal">
+        <div class="modal-box">
+            <h2 id="modalTitle">✨ 今日运势</h2>
+            <div class="sub" id="modalSub">双子座 · 星运消除师</div>
+            <ul class="fortune-list" id="modalList"></ul>
+            <div class="modal-actions">
+                <button class="primary" id="copyShareBtn">📋 复制运势</button>
+                <button id="closeShareBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束模态框 -->
+    <div class="modal-overlay" id="gameOverModal">
+        <div class="modal-box">
+            <h2>💫 星盘已满</h2>
+            <div class="sub">没有可放置的位置，游戏结束</div>
+            <div class="modal-actions">
+                <button class="primary" id="restartGameBtn">开始下一局</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 道具用尽模态框（旋转/炸弹） -->
+    <div class="modal-overlay" id="toolEmptyModal">
+        <div class="modal-box">
+            <h2 id="toolEmptyTitle">🔄 旋转次数已用完</h2>
+            <div class="sub" id="toolEmptySub">观看广告可获得 3 次旋转机会</div>
+            <div class="ad-wait" id="adWait">
+                <div>点击下方按钮观看广告</div>
+                <button class="primary" id="watchAdBtn" style="margin-top:12px;">📺 观看广告</button>
+                <div id="adCountdown" style="display:none; margin-top:8px;">
+                    倒计时 <span class="countdown" id="adTimer">5</span> 秒
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="closeToolEmptyBtn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. 常量与配置
+        // ============================================================
+        const BOARD_SIZE = 8;
+        const CELL_SIZE = 60;
+        const BOARD_HEIGHT = 480;
+        const BOTTOM_AREA_Y = 490;
+        const BOTTOM_AREA_H = 90;
+        const CANVAS_W = 480;
+        const CANVAS_H = 580;
+
+        const CRYSTAL_NAMES = ['白水晶', '粉水晶', '黄水晶', '绿水晶', '紫水晶'];
+        const CRYSTAL_COLORS = ['#e8eef5', '#f9b8d4', '#f5c542', '#7ed9c4', '#c8b0e8'];
+        const FORTUNE_KEYS = ['事业', '爱情', '财富', '健康', '综合'];
+
+        const FORTUNE_DESCS = [
+            ['稳中求进，宜制定长期规划', '贵人运强，合作机会增多', '需耐心耕耘，厚积薄发', '灵感涌现，适合创意工作', '竞争激烈，保持专注'],
+            ['甜蜜升温，适合表达心意', '主动沟通，化解误会', '桃花运旺，魅力四射', '珍惜眼前人，平淡是真', '给彼此空间，感情更稳固'],
+            ['正财稳定，偏财可期', '理性消费，避免冲动', '投资运势佳，但需谨慎', '开源节流，财富积累', '意外之财，但勿贪心'],
+            ['精力充沛，宜运动健身', '注意休息，劳逸结合', '情绪稳定，身心愉悦', '小有不适，及时调理', '健康运势上扬，充满活力'],
+            ['整体顺遂，心想事成', '运势起伏，保持平常心', '贵人相助，好事连连', '挑战与机遇并存', '运势渐入佳境']
+        ];
+
+        const SHAPES = [
+            { matrix: [
+                    [1, 1, 1, 1]
+                ], color: '#5fc8d0' },
+            { matrix: [
+                    [1, 1],
+                    [1, 1]
+                ], color: '#f5c542' },
+            { matrix: [
+                    [0, 1, 0],
+                    [1, 1, 1]
+                ], color: '#b8a0e0' },
+            { matrix: [
+                    [1, 0, 0],
+                    [1, 1, 1]
+                ], color: '#f58a9a' },
+            { matrix: [
+                    [0, 0, 1],
+                    [1, 1, 1]
+                ], color: '#7ac0e8' },
+            { matrix: [
+                    [0, 1, 1],
+                    [1, 1, 0]
+                ], color: '#7ed9c4' },
+            { matrix: [
+                    [1, 1, 0],
+                    [0, 1, 1]
+                ], color: '#f5b8a0' }
+        ];
+
+        // ============================================================
+        // 2. DOM
+        // ============================================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const fortuneGrid = document.getElementById('fortuneGrid');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const zodiacSelect = document.getElementById('zodiacSelect');
+        const shareBtn = document.getElementById('shareBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const rotateBtn = document.getElementById('rotateBtn');
+        const rotateCountDisplay = document.getElementById('rotateCountDisplay');
+        const bombBtn = document.getElementById('bombBtn');
+        const bombCountDisplay = document.getElementById('bombCountDisplay');
+        const shareModal = document.getElementById('shareModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSub = document.getElementById('modalSub');
+        const modalList = document.getElementById('modalList');
+        const copyShareBtn = document.getElementById('copyShareBtn');
+        const closeShareBtn = document.getElementById('closeShareBtn');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const restartGameBtn = document.getElementById('restartGameBtn');
+        const toolEmptyModal = document.getElementById('toolEmptyModal');
+        const toolEmptyTitle = document.getElementById('toolEmptyTitle');
+        const toolEmptySub = document.getElementById('toolEmptySub');
+        const watchAdBtn = document.getElementById('watchAdBtn');
+        const closeToolEmptyBtn = document.getElementById('closeToolEmptyBtn');
+        const adWait = document.getElementById('adWait');
+        const adCountdown = document.getElementById('adCountdown');
+        const adTimer = document.getElementById('adTimer');
+
+        // ============================================================
+        // 3. 音频引擎
+        // ============================================================
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playPlaceSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.06);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            } catch (e) {}
+        }
+
+        function playEliminateSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'square';
+                osc1.frequency.setValueAtTime(380, now);
+                osc1.frequency.exponentialRampToValueAtTime(150, now + 0.35);
+                gain1.gain.setValueAtTime(0.25, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.4);
+
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sawtooth';
+                osc2.frequency.setValueAtTime(520, now);
+                osc2.frequency.exponentialRampToValueAtTime(200, now + 0.3);
+                gain2.gain.setValueAtTime(0.15, now);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now);
+                osc2.stop(now + 0.35);
+
+                const bufferSize = audioCtx.sampleRate * 0.08;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 4);
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const gainNoise = audioCtx.createGain();
+                gainNoise.gain.setValueAtTime(0.2, now);
+                gainNoise.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                noise.connect(gainNoise);
+                gainNoise.connect(audioCtx.destination);
+                noise.start(now);
+                noise.stop(now + 0.08);
+
+                const osc3 = audioCtx.createOscillator();
+                const gain3 = audioCtx.createGain();
+                osc3.type = 'sine';
+                osc3.frequency.setValueAtTime(800, now);
+                osc3.frequency.exponentialRampToValueAtTime(300, now + 0.25);
+                gain3.gain.setValueAtTime(0.1, now);
+                gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc3.connect(gain3);
+                gain3.connect(audioCtx.destination);
+                osc3.start(now);
+                osc3.stop(now + 0.3);
+            } catch (e) {}
+        }
+
+        function playGreatSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523, now);
+                osc1.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.2);
+
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(659, now + 0.05);
+                osc2.frequency.exponentialRampToValueAtTime(1047, now + 0.2);
+                gain2.gain.setValueAtTime(0.15, now + 0.05);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.05);
+                osc2.stop(now + 0.25);
+            } catch (e) {}
+        }
+
+        function playBombSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                // 低沉爆炸音
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+
+                const bufferSize = audioCtx.sampleRate * 0.15;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / bufferSize * 3);
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const gainNoise = audioCtx.createGain();
+                gainNoise.gain.setValueAtTime(0.4, now);
+                gainNoise.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                noise.connect(gainNoise);
+                gainNoise.connect(audioCtx.destination);
+                noise.start(now);
+                noise.stop(now + 0.15);
+            } catch (e) {}
+        }
+
+        // ============================================================
+        // 4. 水晶收集动画
+        // ============================================================
+        let flyingGems = [];
+
+        function startGemFlyAnimation(gem) {
+            const boardRect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / boardRect.width;
+            const scaleY = canvas.height / boardRect.height;
+
+            const startX = (gem.col * CELL_SIZE + CELL_SIZE / 2);
+            const startY = (gem.row * CELL_SIZE + CELL_SIZE / 2);
+
+            const fortuneItems = document.querySelectorAll('.fortune-card');
+            let targetEl = null;
+            FORTUNE_KEYS.forEach((key, idx) => {
+                if (idx === gem.typeIndex) {
+                    targetEl = fortuneItems[idx];
+                }
+            });
+            if (!targetEl) return;
+
+            const canvasRect = canvas.getBoundingClientRect();
+            const elRect = targetEl.getBoundingClientRect();
+            const targetX = (elRect.left + elRect.width / 2 - canvasRect.left) * scaleX;
+            const targetY = (elRect.top + elRect.height / 2 - canvasRect.top) * scaleY;
+
+            flyingGems.push({
+                x: startX,
+                y: startY,
+                targetX: targetX,
+                targetY: targetY,
+                progress: 0,
+                color: CRYSTAL_COLORS[gem.typeIndex],
+                typeIndex: gem.typeIndex,
+                done: false,
+                size: 20
+            });
+        }
+
+        function updateFlyingGems() {
+            let allDone = true;
+            for (const fg of flyingGems) {
+                if (fg.done) continue;
+                fg.progress += 0.025;
+                if (fg.progress >= 1) {
+                    fg.progress = 1;
+                    fg.done = true;
+                    const item = document.querySelectorAll('.fortune-card')[fg.typeIndex];
+                    if (item) {
+                        const valueEl = item.querySelector('.collect-count');
+                        if (valueEl) {
+                            valueEl.style.transform = 'scale(1.4)';
+                            setTimeout(() => {
+                                valueEl.style.transform = 'scale(1)';
+                            }, 300);
+                        }
+                    }
+                }
+                allDone = false;
+            }
+            flyingGems = flyingGems.filter(fg => !fg.done);
+            return !allDone;
+        }
+
+        function drawFlyingGems() {
+            for (const fg of flyingGems) {
+                const t = fg.progress;
+                const ease = 1 - Math.pow(1 - t, 3);
+                const x = fg.x + (fg.targetX - fg.x) * ease;
+                const y = fg.y + (fg.targetY - fg.y) * ease - (1 - ease) * 80;
+                const size = fg.size * (1 - t * 0.5);
+
+                ctx.save();
+                ctx.globalAlpha = 1 - t * 0.3;
+                ctx.shadowColor = fg.color;
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = fg.color;
+                ctx.beginPath();
+                ctx.moveTo(x, y - size);
+                ctx.lineTo(x + size * 0.7, y);
+                ctx.lineTo(x, y + size);
+                ctx.lineTo(x - size * 0.7, y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                ctx.beginPath();
+                ctx.arc(x - 3, y - 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ============================================================
+        // 5. 游戏状态
+        // ============================================================
+        let board = [];
+        let availablePieces = [null, null, null];
+        let gems = [];
+        let fortuneValues = {};
+        let gemCounts = {};
+        let fortuneDescs = {};
+        let score = 0;
+        let gameOver = false;
+        let currentZodiac = '双子';
+
+        let task = { targetIndex: 0, targetCount: 3, currentCount: 0 };
+
+        // 旋转相关
+        let selectedPieceIndex = -1;
+        let selectedPieceRotated = false; // 当前选中的图形是否已消耗过旋转次数
+        let rotateCount = 3;
+        const MAX_ROTATE = 3;
+
+        // 炸弹相关
+        let bombCount = 1;
+        const MAX_BOMB = 1;
+        let bombMode = false; // 是否进入炸弹模式
+
+        // 动画
+        let animating = false;
+        let animRows = [];
+        let animCols = [];
+        let animProgress = 0;
+        let animTimer = null;
+        let particles = [];
+        let pendingClearRows = [];
+        let pendingClearCols = [];
+        let pendingCollectedGems = [];
+
+        // 拖拽
+        let isDragging = false;
+        let dragIndex = -1;
+        let dragPiece = null;
+        let previewRow = -1,
+            previewCol = -1;
+        let previewValid = false;
+        let mouseX = 0,
+            mouseY = 0;
+
+        // 点击/拖拽区分
+        let pendingSelectIndex = -1;
+        let pendingSelectStartX = 0,
+            pendingSelectStartY = 0;
+        let isPendingSelect = false;
+
+        // 广告倒计时
+        let adTimerInterval = null;
+        let adPendingTool = null; // 'rotate' 或 'bomb'
+
+        // ============================================================
+        // 6. 辅助函数
+        // ============================================================
+        function randomPiece() {
+            const idx = Math.floor(Math.random() * SHAPES.length);
+            const shape = SHAPES[idx];
+            return {
+                matrix: shape.matrix.map(row => [...row]),
+                color: shape.color,
+            };
+        }
+
+        function generatePlaceablePiece() {
+            const placeable = [];
+            for (const shape of SHAPES) {
+                if (canPlaceAnywhere(shape.matrix)) {
+                    placeable.push(shape);
+                }
+            }
+            if (placeable.length > 0) {
+                const idx = Math.floor(Math.random() * placeable.length);
+                const shape = placeable[idx];
+                return {
+                    matrix: shape.matrix.map(row => [...row]),
+                    color: shape.color,
+                };
+            }
+            return randomPiece();
+        }
+
+        function canPlaceAnywhere(matrix) {
+            for (let r = 0; r <= BOARD_SIZE - matrix.length; r++) {
+                for (let c = 0; c <= BOARD_SIZE - matrix[0].length; c++) {
+                    if (canPlace(matrix, r, c)) return true;
+                }
+            }
+            return false;
+        }
+
+        function fillAvailable() {
+            let allEmpty = true;
+            for (let i = 0; i < 3; i++) {
+                if (availablePieces[i] !== null) {
+                    allEmpty = false;
+                    break;
+                }
+            }
+            if (allEmpty) {
+                for (let i = 0; i < 3; i++) {
+                    availablePieces[i] = generatePlaceablePiece();
+                }
+                // 重置选中状态
+                selectedPieceIndex = -1;
+                selectedPieceRotated = false;
+                let hasPlaceable = false;
+                for (const p of availablePieces) {
+                    if (p && canPlaceAnywhere(p.matrix)) {
+                        hasPlaceable = true;
+                        break;
+                    }
+                }
+                if (!hasPlaceable) {
+                    gameOver = true;
+                    gameOverModal.classList.add('active');
+                }
+            }
+        }
+
+        function canPlace(matrix, row, col) {
+            for (let r = 0; r < matrix.length; r++) {
+                for (let c = 0; c < matrix[0].length; c++) {
+                    if (matrix[r][c] !== 0) {
+                        const br = row + r;
+                        const bc = col + c;
+                        if (br >= BOARD_SIZE || bc >= BOARD_SIZE || br < 0 || bc < 0) return false;
+                        if (board[br][bc] !== null) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function addGem(row, col, typeIndex) {
+            if (gems.some(g => g.row === row && g.col === col)) return;
+            gems.push({ row, col, typeIndex });
+        }
+
+        function createParticles(rows, cols) {
+            const newParticles = [];
+            const allCells = [];
+            for (const r of rows) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    allCells.push({ row: r, col: c });
+                }
+            }
+            for (const c of cols) {
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    allCells.push({ row: r, col: c });
+                }
+            }
+            const unique = [];
+            const seen = new Set();
+            for (const cell of allCells) {
+                const key = `${cell.row},${cell.col}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    unique.push(cell);
+                }
+            }
+            for (const cell of unique) {
+                const color = board[cell.row][cell.col] || '#d0c8b8';
+                const cx = cell.col * CELL_SIZE + CELL_SIZE / 2;
+                const cy = cell.row * CELL_SIZE + CELL_SIZE / 2;
+                for (let i = 0; i < 2; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 50 + Math.random() * 150;
+                    newParticles.push({
+                        x: cx,
+                        y: cy,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 20,
+                        radius: 3 + Math.random() * 6,
+                        color: color,
+                        life: 1.0,
+                        decay: 0.5 + Math.random() * 0.4,
+                        gravity: 40 + Math.random() * 40
+                    });
+                }
+            }
+            for (let i = 0; i < 10; i++) {
+                const row = Math.floor(Math.random() * BOARD_SIZE);
+                const col = Math.floor(Math.random() * BOARD_SIZE);
+                const color = board[row][col] || '#f5c542';
+                const cx = col * CELL_SIZE + CELL_SIZE / 2;
+                const cy = row * CELL_SIZE + CELL_SIZE / 2;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 30 + Math.random() * 80;
+                newParticles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 30,
+                    radius: 1 + Math.random() * 3,
+                    color: '#ffffff',
+                    life: 1.0,
+                    decay: 0.3 + Math.random() * 0.4,
+                    gravity: 20 + Math.random() * 20
+                });
+            }
+            return newParticles;
+        }
+
+        // 矩阵旋转90度顺时针
+        function rotateMatrix(matrix) {
+            const rows = matrix.length;
+            const cols = matrix[0].length;
+            const newMatrix = [];
+            for (let c = 0; c < cols; c++) {
+                newMatrix[c] = [];
+                for (let r = rows - 1; r >= 0; r--) {
+                    newMatrix[c].push(matrix[r][c]);
+                }
+            }
+            return newMatrix;
+        }
+
+        // ============================================================
+        // 7. 旋转与炸弹逻辑
+        // ============================================================
+        function rotateSelectedPiece() {
+            if (selectedPieceIndex === -1) {
+                alert('请先点击选择一个图形！');
+                return false;
+            }
+            const piece = availablePieces[selectedPieceIndex];
+            if (!piece) {
+                selectedPieceIndex = -1;
+                selectedPieceRotated = false;
+                return false;
+            }
+            // 检查旋转次数
+            if (rotateCount <= 0) {
+                openToolEmptyModal('rotate');
+                return false;
+            }
+            // 如果当前选中的图形还没有消耗过旋转次数，则消耗一次
+            if (!selectedPieceRotated) {
+                rotateCount--;
+                selectedPieceRotated = true;
+                updateToolUI();
+            }
+            // 执行旋转
+            piece.matrix = rotateMatrix(piece.matrix);
+            draw();
+            return true;
+        }
+
+        function useBomb() {
+            if (bombCount <= 0) {
+                openToolEmptyModal('bomb');
+                return;
+            }
+            // 进入炸弹模式
+            bombMode = true;
+            bombBtn.classList.add('active');
+            // 提示用户点击棋盘
+            alert('💣 炸弹模式已开启，点击棋盘上的一个方块将其消除。');
+        }
+
+        function executeBomb(row, col) {
+            if (board[row][col] === null) {
+                alert('该位置没有方块！');
+                return;
+            }
+            // 消除该格子
+            board[row][col] = null;
+            bombCount--;
+            bombMode = false;
+            bombBtn.classList.remove('active');
+            playBombSound();
+            updateToolUI();
+            draw();
+            // 检查游戏是否结束（可能需要补填备选）
+            fillAvailable();
+        }
+
+        // ============================================================
+        // 8. 工具UI更新 & 广告
+        // ============================================================
+        function updateToolUI() {
+            rotateCountDisplay.textContent = `剩余 ${rotateCount} 次`;
+            bombCountDisplay.textContent = `剩余 ${bombCount} 次`;
+            if (bombCount <= 0) {
+                bombBtn.classList.remove('active');
+                bombMode = false;
+            }
+        }
+
+        function openToolEmptyModal(type) {
+            adPendingTool = type;
+            if (type === 'rotate') {
+                toolEmptyTitle.textContent = '🔄 旋转次数已用完';
+                toolEmptySub.textContent = '观看广告可获得 3 次旋转机会';
+            } else if (type === 'bomb') {
+                toolEmptyTitle.textContent = '💣 炸弹次数已用完';
+                toolEmptySub.textContent = '观看广告可获得 1 次炸弹机会';
+            }
+            toolEmptyModal.classList.add('active');
+        }
+
+        function closeToolEmptyModal() {
+            toolEmptyModal.classList.remove('active');
+            clearAdTimer();
+            adPendingTool = null;
+        }
+
+        function watchAdForTool() {
+            adWait.style.display = 'none';
+            adCountdown.style.display = 'block';
+            let count = 5;
+            adTimer.textContent = count;
+            if (adTimerInterval) clearInterval(adTimerInterval);
+            adTimerInterval = setInterval(() => {
+                count--;
+                adTimer.textContent = count;
+                if (count <= 0) {
+                    clearInterval(adTimerInterval);
+                    adTimerInterval = null;
+                    // 发放奖励
+                    if (adPendingTool === 'rotate') {
+                        rotateCount += 3;
+                    } else if (adPendingTool === 'bomb') {
+                        bombCount += 1;
+                    }
+                    updateToolUI();
+                    closeToolEmptyModal();
+                    alert('🎉 获得道具奖励！');
+                }
+            }, 1000);
+        }
+
+        function clearAdTimer() {
+            if (adTimerInterval) {
+                clearInterval(adTimerInterval);
+                adTimerInterval = null;
+            }
+            adWait.style.display = 'block';
+            adCountdown.style.display = 'none';
+        }
+
+        // ============================================================
+        // 9. 消除动画
+        // ============================================================
+        function startEliminateAnimation(rows, cols, collectedGems) {
+            playEliminateSound();
+
+            const totalLines = rows.length + cols.length;
+            if (totalLines >= 2) {
+                setTimeout(() => {
+                    playGreatSound();
+                }, 150);
+            }
+
+            if (animTimer) {
+                cancelAnimationFrame(animTimer);
+                animTimer = null;
+            }
+            animRows = rows.slice();
+            animCols = cols.slice();
+            pendingClearRows = rows.slice();
+            pendingClearCols = cols.slice();
+            pendingCollectedGems = collectedGems.slice();
+            animProgress = 0;
+            animating = true;
+            particles = createParticles(rows, cols);
+
+            for (const gem of collectedGems) {
+                startGemFlyAnimation(gem);
+            }
+
+            let startTime = null;
+            const duration = 500;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+                animProgress = Math.min(elapsed / duration, 1);
+
+                for (const p of particles) {
+                    p.x += p.vx * 0.016;
+                    p.y += p.vy * 0.016;
+                    p.vy += (p.gravity || 60) * 0.016;
+                    p.life -= p.decay * 0.016;
+                    p.radius *= (1 - 0.005);
+                }
+                particles = particles.filter(p => p.life > 0 && p.radius > 0.3);
+
+                const hasFlying = updateFlyingGems();
+
+                draw();
+                if (animProgress < 1 || hasFlying) {
+                    animTimer = requestAnimationFrame(step);
+                } else {
+                    animating = false;
+                    const cellsToClear = new Set();
+                    for (const r of pendingClearRows) {
+                        for (let c = 0; c < BOARD_SIZE; c++) {
+                            cellsToClear.add(`${r},${c}`);
+                        }
+                    }
+                    for (const c of pendingClearCols) {
+                        for (let r = 0; r < BOARD_SIZE; r++) {
+                            cellsToClear.add(`${r},${c}`);
+                        }
+                    }
+                    for (const key of cellsToClear) {
+                        const [r, c] = key.split(',').map(Number);
+                        board[r][c] = null;
+                    }
+
+                    for (const gem of pendingCollectedGems) {
+                        const idx = gem.typeIndex;
+                        if (idx >= 0 && idx < FORTUNE_KEYS.length) {
+                            const key = FORTUNE_KEYS[idx];
+                            fortuneValues[key] = Math.min(100, fortuneValues[key] + 5);
+                            gemCounts[key] = (gemCounts[key] || 0) + 1;
+                            if (idx === task.targetIndex) {
+                                task.currentCount = Math.min(task.targetCount, task.currentCount + 1);
+                                updateTaskUI();
+                            }
+                        }
+                    }
+                    updateFortuneDisplay();
+                    updateScore();
+                    particles = [];
+                    draw();
+                    animTimer = null;
+                }
+            }
+            animTimer = requestAnimationFrame(step);
+        }
+
+        function placePiece(matrix, color, row, col) {
+            if (!canPlace(matrix, row, col)) return false;
+
+            const covered = [];
+            for (let r = 0; r < matrix.length; r++) {
+                for (let c = 0; c < matrix[0].length; c++) {
+                    if (matrix[r][c] !== 0) {
+                        const br = row + r;
+                        const bc = col + c;
+                        board[br][bc] = color;
+                        covered.push({ row: br, col: bc });
+                    }
+                }
+            }
+
+            if (covered.length > 0 && Math.random() < 0.25) {
+                const pos = covered[Math.floor(Math.random() * covered.length)];
+                const typeIdx = Math.floor(Math.random() * CRYSTAL_NAMES.length);
+                addGem(pos.row, pos.col, typeIdx);
+            }
+
+            const rowsToClear = [];
+            const colsToClear = [];
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                if (board[r].every(cell => cell !== null)) rowsToClear.push(r);
+            }
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                let full = true;
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    if (board[r][c] === null) { full = false; break; }
+                }
+                if (full) colsToClear.push(c);
+            }
+
+            const hasElimination = (rowsToClear.length > 0 || colsToClear.length > 0);
+
+            if (hasElimination) {
+                const affectedRows = new Set(rowsToClear);
+                const affectedCols = new Set(colsToClear);
+                const collectedGems = [];
+                gems = gems.filter(gem => {
+                    const inRow = affectedRows.has(gem.row);
+                    const inCol = affectedCols.has(gem.col);
+                    if (inRow || inCol) {
+                        collectedGems.push(gem);
+                        return false;
+                    }
+                    return true;
+                });
+                const lines = rowsToClear.length + colsToClear.length;
+                score += lines * 10;
+                startEliminateAnimation(rowsToClear, colsToClear, collectedGems);
+            } else {
+                playPlaceSound();
+                draw();
+            }
+
+            // 将使用掉的备选置为 null
+            if (dragIndex >= 0 && dragIndex < 3) {
+                availablePieces[dragIndex] = null;
+                if (selectedPieceIndex === dragIndex) {
+                    selectedPieceIndex = -1;
+                    selectedPieceRotated = false;
+                }
+            }
+            fillAvailable();
+            updateToolUI();
+
+            return true;
+        }
+
+        function generateTask() {
+            const idx = Math.floor(Math.random() * CRYSTAL_NAMES.length);
+            const count = Math.floor(Math.random() * 3) + 2;
+            task.targetIndex = idx;
+            task.targetCount = count;
+            task.currentCount = 0;
+            updateTaskUI();
+        }
+
+        function updateTaskUI() {}
+
+        // ============================================================
+        // 10. 绘制
+        // ============================================================
+        function draw() {
+            ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+            // 棋盘
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const x = c * CELL_SIZE,
+                        y = r * CELL_SIZE;
+                    ctx.fillStyle = '#e8e0d8';
+                    ctx.fillRect(x, y, CELL_SIZE - 1, CELL_SIZE - 1);
+                    ctx.fillStyle = '#f5efe8';
+                    ctx.fillRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+                }
+            }
+
+            // 方块
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const color = board[r][c];
+                    if (color !== null) {
+                        let isAnimatingCell = false;
+                        if (animating) {
+                            if (animRows.includes(r) || animCols.includes(c)) {
+                                isAnimatingCell = true;
+                            }
+                        }
+                        const x = c * CELL_SIZE,
+                            y = r * CELL_SIZE;
+                        if (isAnimatingCell) {
+                            const scale = 1 - animProgress * 0.6;
+                            const offset = (1 - scale) * CELL_SIZE / 2;
+                            const alpha = 1 - animProgress * 0.2;
+                            ctx.globalAlpha = alpha;
+                            ctx.fillStyle = '#ffffff';
+                            ctx.shadowColor = 'rgba(255,255,255,0.6)';
+                            ctx.shadowBlur = 20 * (1 - animProgress);
+                            ctx.fillRect(x + offset, y + offset, CELL_SIZE * scale, CELL_SIZE * scale);
+                            ctx.shadowBlur = 0;
+                            ctx.globalAlpha = 1;
+                            ctx.fillStyle = color;
+                            ctx.shadowColor = 'rgba(0,0,0,0.05)';
+                            ctx.shadowBlur = 4;
+                            ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                            ctx.shadowBlur = 0;
+                        } else {
+                            ctx.fillStyle = color;
+                            ctx.shadowColor = 'rgba(0,0,0,0.05)';
+                            ctx.shadowBlur = 4;
+                            ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                            ctx.shadowBlur = 0;
+                            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                            ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, 4);
+                        }
+                    }
+                }
+            }
+
+            // 宝石
+            for (const gem of gems) {
+                const x = gem.col * CELL_SIZE,
+                    y = gem.row * CELL_SIZE;
+                const color = CRYSTAL_COLORS[gem.typeIndex] || '#f5c542';
+                const cx = x + CELL_SIZE / 2,
+                    cy = y + CELL_SIZE / 2;
+                const size = CELL_SIZE * 0.42;
+                const grad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, size);
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.3, color);
+                grad.addColorStop(1, color);
+                ctx.shadowColor = 'rgba(200,180,160,0.4)';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - size);
+                ctx.lineTo(cx + size * 0.7, cy);
+                ctx.lineTo(cx, cy + size);
+                ctx.lineTo(cx - size * 0.7, cy);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.beginPath();
+                ctx.arc(cx - 4, cy - 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.beginPath();
+                ctx.arc(cx + 3, cy - 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 粒子
+            for (const p of particles) {
+                ctx.globalAlpha = Math.min(p.life, 1);
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(p.radius, 0.5), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            ctx.globalAlpha = 1;
+
+            // 飞行宝石
+            drawFlyingGems();
+
+            // ---- 炸弹模式指示 ----
+            if (bombMode) {
+                ctx.fillStyle = 'rgba(255,0,0,0.05)';
+                ctx.fillRect(0, 0, CANVAS_W, BOARD_HEIGHT);
+                ctx.strokeStyle = '#ff4444';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 8]);
+                ctx.strokeRect(0, 0, CANVAS_W, BOARD_HEIGHT);
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#ff4444';
+                ctx.font = '20px sans-serif';
+                ctx.fillText('💣 炸弹模式', 10, 40);
+            }
+
+            // ---- 预览 + 高亮 ----
+            if (isDragging && dragPiece && previewRow >= 0 && previewCol >= 0) {
+                const matrix = dragPiece.matrix;
+                const valid = canPlace(matrix, previewRow, previewCol);
+
+                ctx.globalAlpha = 0.35;
+                for (let r = 0; r < matrix.length; r++) {
+                    for (let c = 0; c < matrix[0].length; c++) {
+                        if (matrix[r][c] !== 0) {
+                            const x = (previewCol + c) * CELL_SIZE;
+                            const y = (previewRow + r) * CELL_SIZE;
+                            ctx.fillStyle = valid ? 'rgba(100, 200, 100, 0.25)' : 'rgba(255, 100, 100, 0.25)';
+                            ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                            ctx.strokeStyle = valid ? 'rgba(80, 180, 80, 0.6)' : 'rgba(255, 80, 80, 0.6)';
+                            ctx.lineWidth = 2;
+                            ctx.setLineDash([4, 4]);
+                            ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+                            ctx.setLineDash([]);
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1.0;
+
+                if (valid) {
+                    const tempBoard = board.map(row => [...row]);
+                    for (let r = 0; r < matrix.length; r++) {
+                        for (let c = 0; c < matrix[0].length; c++) {
+                            if (matrix[r][c] !== 0) {
+                                tempBoard[previewRow + r][previewCol + c] = dragPiece.color;
+                            }
+                        }
+                    }
+                    const rowsToClear = [];
+                    const colsToClear = [];
+                    for (let r = 0; r < BOARD_SIZE; r++) {
+                        if (tempBoard[r].every(cell => cell !== null)) rowsToClear.push(r);
+                    }
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        let full = true;
+                        for (let r = 0; r < BOARD_SIZE; r++) {
+                            if (tempBoard[r][c] === null) { full = false; break; }
+                        }
+                        if (full) colsToClear.push(c);
+                    }
+                    ctx.globalAlpha = 0.30;
+                    for (const r of rowsToClear) {
+                        ctx.fillStyle = '#f5c542';
+                        ctx.fillRect(0, r * CELL_SIZE, CANVAS_W, CELL_SIZE);
+                        ctx.shadowColor = '#f5c542';
+                        ctx.shadowBlur = 20;
+                        ctx.strokeStyle = '#f5c542';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(0, r * CELL_SIZE, CANVAS_W, CELL_SIZE);
+                        ctx.shadowBlur = 0;
+                    }
+                    for (const c of colsToClear) {
+                        ctx.fillStyle = '#f5c542';
+                        ctx.fillRect(c * CELL_SIZE, 0, CELL_SIZE, BOARD_HEIGHT);
+                        ctx.shadowColor = '#f5c542';
+                        ctx.shadowBlur = 20;
+                        ctx.strokeStyle = '#f5c542';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(c * CELL_SIZE, 0, CELL_SIZE, BOARD_HEIGHT);
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+
+            // ---- 底部备选 ----
+            ctx.fillStyle = '#f0e8e0';
+            ctx.fillRect(0, BOTTOM_AREA_Y, CANVAS_W, BOTTOM_AREA_H);
+            ctx.fillStyle = 'rgba(0,0,0,0.02)';
+            ctx.fillRect(0, BOTTOM_AREA_Y, CANVAS_W, 1);
+
+            const pieceWidth = 130;
+            const spacing = (CANVAS_W - 3 * pieceWidth) / 4;
+            const startX = spacing;
+            const pieceY = BOTTOM_AREA_Y + 10;
+            const pieceHeight = BOTTOM_AREA_H - 20;
+
+            for (let i = 0; i < 3; i++) {
+                const x = startX + i * (pieceWidth + spacing);
+                const y = pieceY;
+                const p = availablePieces[i];
+                if (p) {
+                    const isSelected = (i === selectedPieceIndex);
+                    ctx.globalAlpha = (isDragging && dragIndex === i) ? 0.3 : 1.0;
+                    ctx.fillStyle = isSelected ? 'rgba(255,215,0,0.3)' : 'rgba(255,255,255,0.3)';
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, pieceWidth, pieceHeight, 16);
+                    ctx.fill();
+                    if (isSelected) {
+                        ctx.strokeStyle = '#f5b342';
+                        ctx.lineWidth = 3;
+                        ctx.shadowColor = '#f5b342';
+                        ctx.shadowBlur = 12;
+                        ctx.beginPath();
+                        ctx.roundRect(x, y, pieceWidth, pieceHeight, 16);
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
+                    }
+                    drawPieceInRect(ctx, p.matrix, p.color, x, y, pieceWidth, pieceHeight);
+                    ctx.globalAlpha = 1.0;
+                } else {
+                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, pieceWidth, pieceHeight, 16);
+                    ctx.fill();
+                }
+            }
+
+            // ---- 跟随方块 ----
+            if (isDragging && dragPiece) {
+                const matrix = dragPiece.matrix;
+                const color = dragPiece.color;
+                const rows = matrix.length,
+                    cols = matrix[0].length;
+                const blockSize = CELL_SIZE;
+                const totalW = cols * blockSize;
+                const totalH = rows * blockSize;
+                const drawX = mouseX - totalW / 2;
+                const drawY = mouseY - totalH / 2;
+                ctx.globalAlpha = 0.85;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        if (matrix[r][c] !== 0) {
+                            const px = drawX + c * blockSize;
+                            const py = drawY + r * blockSize;
+                            ctx.fillStyle = color;
+                            ctx.shadowColor = 'rgba(255,255,255,0.4)';
+                            ctx.shadowBlur = 20;
+                            ctx.fillRect(px, py, blockSize - 2, blockSize - 2);
+                            ctx.shadowBlur = 0;
+                            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                            ctx.fillRect(px + 2, py + 2, blockSize - 6, 2);
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        function drawPieceInRect(ctx, matrix, color, x, y, w, h) {
+            const rows = matrix.length,
+                cols = matrix[0].length;
+            const maxDim = Math.max(rows, cols);
+            const cellSize = Math.min((w - 8) / maxDim, (h - 8) / maxDim, 30);
+            const totalW = cols * cellSize,
+                totalH = rows * cellSize;
+            const startX = x + (w - totalW) / 2,
+                startY = y + (h - totalH) / 2;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (matrix[r][c] !== 0) {
+                        const px = startX + c * cellSize;
+                        const py = startY + r * cellSize;
+                        ctx.fillStyle = color;
+                        ctx.shadowColor = 'rgba(0,0,0,0.05)';
+                        ctx.shadowBlur = 4;
+                        ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                        ctx.fillRect(px + 2, py + 2, cellSize - 4, 2);
+                    }
+                }
+            }
+        }
+
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                this.closePath();
+                return this;
+            };
+        }
+
+        // ============================================================
+        // 11. UI更新
+        // ============================================================
+        function updateFortuneDisplay() {
+            fortuneGrid.innerHTML = '';
+            FORTUNE_KEYS.forEach((key, idx) => {
+                const count = task.targetCount;
+                const div = document.createElement('div');
+                div.className = 'fortune-card';
+                div.innerHTML = `
+                    <span class="crystal-name">${CRYSTAL_NAMES[idx]}</span>
+                    <span class="collect-count">× ${count}</span>
+                `;
+                fortuneGrid.appendChild(div);
+            });
+        }
+
+        function updateScore() {
+            scoreDisplay.textContent = score;
+        }
+
+        // ============================================================
+        // 12. 游戏逻辑
+        // ============================================================
+        function initBoard() {
+            board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
+        }
+
+        function initFortune() {
+            FORTUNE_KEYS.forEach((key, idx) => {
+                fortuneValues[key] = Math.floor(Math.random() * 40) + 40;
+                gemCounts[key] = 0;
+                const descs = FORTUNE_DESCS[idx] || ['运势平稳'];
+                fortuneDescs[key] = descs[Math.floor(Math.random() * descs.length)];
+            });
+            updateFortuneDisplay();
+        }
+
+        function resetGame() {
+            if (animTimer) {
+                cancelAnimationFrame(animTimer);
+                animTimer = null;
+            }
+            animating = false;
+            particles = [];
+            flyingGems = [];
+            gameOverModal.classList.remove('active');
+            toolEmptyModal.classList.remove('active');
+            clearAdTimer();
+            initBoard();
+            gems = [];
+            score = 0;
+            gameOver = false;
+            availablePieces = [null, null, null];
+            rotateCount = MAX_ROTATE;
+            bombCount = MAX_BOMB;
+            selectedPieceIndex = -1;
+            selectedPieceRotated = false;
+            bombMode = false;
+            bombBtn.classList.remove('active');
+            fillAvailable();
+            initFortune();
+            generateTask();
+            updateScore();
+            updateToolUI();
+            isDragging = false;
+            dragIndex = -1;
+            dragPiece = null;
+            previewRow = -1;
+            previewCol = -1;
+            pendingSelectIndex = -1;
+            isPendingSelect = false;
+            draw();
+        }
+
+        // ============================================================
+        // 13. 交互事件
+        // ============================================================
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function hitTestPiece(cx, cy) {
+            if (cy < BOTTOM_AREA_Y) return -1;
+            const pieceWidth = 130;
+            const spacing = (CANVAS_W - 3 * pieceWidth) / 4;
+            const startX = spacing;
+            const pieceY = BOTTOM_AREA_Y + 10;
+            const pieceHeight = BOTTOM_AREA_H - 20;
+            for (let i = 0; i < 3; i++) {
+                const x = startX + i * (pieceWidth + spacing);
+                const y = pieceY;
+                if (cx >= x && cx <= x + pieceWidth && cy >= y && cy <= y + pieceHeight) {
+                    if (availablePieces[i] !== null) return i;
+                }
+            }
+            return -1;
+        }
+
+        let isPointerDown = false;
+        let pointerDownX = 0,
+            pointerDownY = 0;
+        let pointerDownIdx = -1;
+
+        function onPointerDown(e) {
+            if (gameOver || animating) return;
+            const pos = getCanvasCoords(e);
+            pointerDownX = pos.x;
+            pointerDownY = pos.y;
+            isPointerDown = true;
+
+            // 如果炸弹模式激活，点击棋盘执行炸弹
+            if (bombMode) {
+                const row = Math.floor(pos.y / CELL_SIZE);
+                const col = Math.floor(pos.x / CELL_SIZE);
+                if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                    executeBomb(row, col);
+                }
+                return;
+            }
+
+            // 检测是否点击到备选图形
+            const idx = hitTestPiece(pos.x, pos.y);
+            if (idx >= 0) {
+                pointerDownIdx = idx;
+                isPendingSelect = true;
+                pendingSelectIndex = idx;
+                pendingSelectStartX = pos.x;
+                pendingSelectStartY = pos.y;
+            } else {
+                pointerDownIdx = -1;
+                isPendingSelect = false;
+                // 点击空白区域取消选中
+                selectedPieceIndex = -1;
+                selectedPieceRotated = false;
+                draw();
+            }
+        }
+
+        function onPointerMove(e) {
+            const pos = getCanvasCoords(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
+
+            if (isDragging) {
+                calcPreview(mouseX, mouseY);
+                draw();
+                return;
+            }
+
+            if (isPendingSelect && pointerDownIdx >= 0) {
+                const dx = pos.x - pendingSelectStartX;
+                const dy = pos.y - pendingSelectStartY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 8) {
+                    isPendingSelect = false;
+                    isDragging = true;
+                    const piece = availablePieces[pointerDownIdx];
+                    if (piece) {
+                        dragIndex = pointerDownIdx;
+                        dragPiece = {
+                            matrix: piece.matrix.map(row => [...row]),
+                            color: piece.color
+                        };
+                        if (selectedPieceIndex !== -1) {
+                            selectedPieceIndex = -1;
+                            selectedPieceRotated = false;
+                        }
+                        calcPreview(mouseX, mouseY);
+                        draw();
+                    }
+                }
+            }
+        }
+
+        function onPointerUp(e) {
+            const pos = getCanvasCoords(e);
+            mouseX = pos.x;
+            mouseY = pos.y;
+
+            if (isDragging) {
+                if (dragPiece && previewRow >= 0 && previewCol >= 0 && previewValid) {
+                    const matrix = dragPiece.matrix;
+                    const color = dragPiece.color;
+                    const row = previewRow;
+                    const col = previewCol;
+                    placePiece(matrix, color, row, col);
+                }
+                isDragging = false;
+                dragIndex = -1;
+                dragPiece = null;
+                previewRow = -1;
+                previewCol = -1;
+                draw();
+                isPointerDown = false;
+                pointerDownIdx = -1;
+                return;
+            }
+
+            if (isPendingSelect && pointerDownIdx >= 0) {
+                const dist = Math.sqrt(Math.pow(pos.x - pendingSelectStartX, 2) + Math.pow(pos.y - pendingSelectStartY, 2));
+                if (dist < 8) {
+                    // 点击切换选中状态
+                    if (selectedPieceIndex === pointerDownIdx) {
+                        selectedPieceIndex = -1;
+                        selectedPieceRotated = false;
+                    } else {
+                        selectedPieceIndex = pointerDownIdx;
+                        selectedPieceRotated = false; // 新选中，重置消耗标记
+                    }
+                    draw();
+                }
+            }
+
+            isPendingSelect = false;
+            isPointerDown = false;
+            pointerDownIdx = -1;
+        }
+
+        function onPointerLeave(e) {
+            if (isDragging) {
+                isDragging = false;
+                dragIndex = -1;
+                dragPiece = null;
+                previewRow = -1;
+                previewCol = -1;
+                draw();
+            }
+            isPendingSelect = false;
+            isPointerDown = false;
+            pointerDownIdx = -1;
+        }
+
+        canvas.addEventListener('mousedown', onPointerDown);
+        canvas.addEventListener('mousemove', onPointerMove);
+        canvas.addEventListener('mouseup', onPointerUp);
+        canvas.addEventListener('mouseleave', onPointerLeave);
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            onPointerDown(e);
+        }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            onPointerMove(e);
+        }, { passive: false });
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            onPointerUp(e);
+        }, { passive: false });
+        canvas.addEventListener('touchcancel', (e) => {
+            e.preventDefault();
+            if (isDragging) {
+                isDragging = false;
+                dragIndex = -1;
+                dragPiece = null;
+                previewRow = -1;
+                previewCol = -1;
+                draw();
+            }
+            isPendingSelect = false;
+            isPointerDown = false;
+            pointerDownIdx = -1;
+        });
+
+        function calcPreview(mx, my) {
+            if (my < BOARD_HEIGHT && mx >= 0 && mx < CANVAS_W) {
+                const col = Math.floor(mx / CELL_SIZE);
+                const row = Math.floor(my / CELL_SIZE);
+                if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                    if (dragPiece) {
+                        const matrix = dragPiece.matrix;
+                        let r = row,
+                            c = col;
+                        if (c + matrix[0].length > BOARD_SIZE) c = BOARD_SIZE - matrix[0].length;
+                        if (r + matrix.length > BOARD_SIZE) r = BOARD_SIZE - matrix.length;
+                        if (c < 0) c = 0;
+                        if (r < 0) r = 0;
+                        previewRow = r;
+                        previewCol = c;
+                        previewValid = canPlace(matrix, r, c);
+                        return;
+                    }
+                }
+            }
+            previewRow = -1;
+            previewCol = -1;
+            previewValid = false;
+        }
+
+        // ============================================================
+        // 14. 按钮事件
+        // ============================================================
+        rotateBtn.addEventListener('click', () => {
+            rotateSelectedPiece();
+        });
+
+        bombBtn.addEventListener('click', () => {
+            useBomb();
+        });
+
+        watchAdBtn.addEventListener('click', () => {
+            watchAdForTool();
+        });
+
+        closeToolEmptyBtn.addEventListener('click', () => {
+            closeToolEmptyModal();
+        });
+
+        // ============================================================
+        // 15. 今日运势模态框
+        // ============================================================
+        function openShareModal() {
+            const zodiac = zodiacSelect.value;
+            modalTitle.textContent = `✨ ${zodiac}座 今日运势`;
+            const taskName = CRYSTAL_NAMES[task.targetIndex];
+            modalSub.innerHTML = `今日任务：收集 <strong>${task.targetCount}</strong> 个 <strong>${taskName}</strong> · 星运消除师`;
+            modalList.innerHTML = '';
+            FORTUNE_KEYS.forEach((key, idx) => {
+                const val = Math.round(fortuneValues[key] || 0);
+                const desc = fortuneDescs[key] || '运势平稳';
+                const count = task.targetCount;
+                const upgrade = `收集 ${count} 个 ${CRYSTAL_NAMES[idx]}`;
+                const starCount = Math.min(5, Math.floor(val / 20));
+                const starsHtml = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="row">
+                        <span class="crystal-name">${CRYSTAL_NAMES[idx]} (${key})</span>
+                        <span class="stars">${starsHtml.split('').map(ch => ch === '★' ? '<span>★</span>' : '<span class="empty">☆</span>').join('')}</span>
+                    </div>
+                    <div class="row">
+                        <span class="desc">${desc}</span>
+                        <span class="upgrade">${upgrade}</span>
+                    </div>
+                `;
+                modalList.appendChild(li);
+            });
+            shareModal.classList.add('active');
+        }
+
+        function closeShareModal() { shareModal.classList.remove('active'); }
+
+        function copyShareText() {
+            const zodiac = zodiacSelect.value;
+            const lines = FORTUNE_KEYS.map((key, idx) => {
+                const val = Math.round(fortuneValues[key] || 0);
+                const starCount = Math.min(5, Math.floor(val / 20));
+                const stars = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
+                const desc = fortuneDescs[key] || '';
+                const count = task.targetCount;
+                const upgrade = `收集${count}个${CRYSTAL_NAMES[idx]}`;
+                return `${CRYSTAL_NAMES[idx]}(${key}): ${stars} — ${desc} (${upgrade})`;
+            });
+            const msg =
+                `✨ 星运消除师 · ${zodiac}座 今日运势\n今日任务：收集 ${task.targetCount} 个 ${CRYSTAL_NAMES[task.targetIndex]}\n${lines.join('\n')}\n#星运消除师`;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(msg).then(() => {
+                    alert('📋 运势已复制，快去分享吧！');
+                }).catch(() => {
+                    copyFallback(msg);
+                });
+            } else {
+                copyFallback(msg);
+            }
+        }
+
+        function copyFallback(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('📋 运势已复制，快去分享吧！');
+            } catch (err) {
+                alert('复制失败，请手动复制以下内容：\n' + text);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        shareBtn.addEventListener('click', openShareModal);
+        closeShareBtn.addEventListener('click', closeShareModal);
+        copyShareBtn.addEventListener('click', copyShareText);
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) closeShareModal();
+        });
+
+        // ============================================================
+        // 16. 星座切换
+        // ============================================================
+        zodiacSelect.addEventListener('change', () => {
+            currentZodiac = zodiacSelect.value;
+            FORTUNE_KEYS.forEach((key, idx) => {
+                fortuneValues[key] = Math.floor(Math.random() * 40) + 40;
+                const descs = FORTUNE_DESCS[idx] || ['运势平稳'];
+                fortuneDescs[key] = descs[Math.floor(Math.random() * descs.length)];
+            });
+            updateFortuneDisplay();
+            generateTask();
+            draw();
+        });
+
+        // ============================================================
+        // 17. 重置 & 下一局
+        // ============================================================
+        resetBtn.addEventListener('click', resetGame);
+        restartGameBtn.addEventListener('click', resetGame);
+
+        // ============================================================
+        // 18. 启动
+        // ============================================================
+        function startGame() {
+            initBoard();
+            initFortune();
+            score = 0;
+            updateScore();
+            availablePieces = [null, null, null];
+            rotateCount = MAX_ROTATE;
+            bombCount = MAX_BOMB;
+            selectedPieceIndex = -1;
+            selectedPieceRotated = false;
+            fillAvailable();
+            gems = [];
+            gameOver = false;
+            generateTask();
+            updateToolUI();
+            draw();
+            currentZodiac = zodiacSelect.value;
+        }
+        startGame();
+    </script>
+</body>
+</html>
