@@ -124,6 +124,7 @@
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: transform 0.1s;
         }
 
         .fortune-card .crystal-name {
@@ -142,6 +143,12 @@
             padding: 0 8px;
             border-radius: 20px;
             display: inline-block;
+            transition: transform 0.15s ease;
+        }
+
+        .fortune-card .collect-count.pop {
+            transform: scale(1.5);
+            color: #d48a2a;
         }
 
         .board-wrapper {
@@ -183,18 +190,6 @@
             flex-wrap: wrap;
         }
 
-        .score-display {
-            color: #5a4a3a;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .score-display span {
-            color: #3a2a1a;
-            font-size: 22px;
-            font-weight: 800;
-        }
-
         .tool-btn {
             background: rgba(255, 255, 255, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.4);
@@ -209,6 +204,7 @@
             align-items: center;
             gap: 4px;
             backdrop-filter: blur(4px);
+            position: relative;
         }
 
         .tool-btn:hover {
@@ -222,6 +218,19 @@
             background: rgba(255, 215, 0, 0.4);
             border-color: #f5b342;
             box-shadow: 0 0 12px rgba(245, 179, 66, 0.3);
+        }
+
+        .tool-btn .badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #f5b342;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 12px;
+            line-height: 1.4;
         }
 
         .tool-count {
@@ -253,7 +262,6 @@
             transform: scale(0.94);
         }
 
-        /* 模态框 */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -390,18 +398,53 @@
             background: #e69e2e;
         }
 
-        .ad-wait {
+        .ad-container {
             margin: 12px 0;
-            padding: 16px;
-            background: rgba(255, 215, 0, 0.1);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.04);
             border-radius: 20px;
-            border: 1px dashed #f5b342;
+            border: 2px dashed #d48a2a;
+            text-align: center;
         }
 
-        .ad-wait .countdown {
-            font-size: 28px;
+        .ad-container .ad-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .ad-container .ad-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3a2a1a;
+        }
+
+        .ad-container .ad-countdown {
+            font-size: 32px;
             font-weight: 800;
             color: #d48a2a;
+            margin: 8px 0;
+        }
+
+        .ad-container .ad-sub {
+            font-size: 14px;
+            color: #7a6a5a;
+        }
+
+        .ad-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .ad-progress .bar {
+            height: 100%;
+            width: 0%;
+            background: #f5b342;
+            transition: width 0.3s;
+            border-radius: 4px;
         }
 
         @media (max-width: 480px) {
@@ -476,8 +519,7 @@
 
         <div class="bottom-bar">
             <div class="bottom-left">
-                <div class="score-display">✨ 得分 <span id="scoreDisplay">0</span></div>
-                <button class="tool-btn" id="rotateBtn">🔄 旋转</button>
+                <button class="tool-btn" id="rotateBtn">🔄 旋转<span class="badge" id="rotateBadge" style="display:none;">已消耗</span></button>
                 <span class="tool-count" id="rotateCountDisplay">剩余 3 次</span>
                 <button class="tool-btn" id="bombBtn">💣 炸弹</button>
                 <span class="tool-count" id="bombCountDisplay">剩余 1 次</span>
@@ -510,16 +552,23 @@
         </div>
     </div>
 
-    <!-- 道具用尽模态框 -->
+    <!-- 道具用尽模态框（含广告模拟） -->
     <div class="modal-overlay" id="toolEmptyModal">
         <div class="modal-box">
             <h2 id="toolEmptyTitle">🔄 旋转次数已用完</h2>
             <div class="sub" id="toolEmptySub">观看广告可获得 3 次旋转机会</div>
-            <div class="ad-wait" id="adWait">
-                <div>点击下方按钮观看广告</div>
-                <button class="primary" id="watchAdBtn" style="margin-top:12px;">📺 观看广告</button>
-                <div id="adCountdown" style="display:none; margin-top:8px;">
-                    倒计时 <span class="countdown" id="adTimer">5</span> 秒
+            <div class="ad-container" id="adContainer">
+                <div id="adIdle">
+                    <div class="ad-icon">📺</div>
+                    <div class="ad-text">点击下方按钮观看广告</div>
+                    <button class="primary" id="watchAdBtn" style="margin-top:12px;">▶ 观看广告</button>
+                </div>
+                <div id="adPlaying" style="display:none;">
+                    <div class="ad-icon">⏳</div>
+                    <div class="ad-text">广告播放中，请稍候...</div>
+                    <div class="ad-countdown" id="adTimerDisplay">5</div>
+                    <div class="ad-sub">倒计时</div>
+                    <div class="ad-progress"><div class="bar" id="adProgressBar" style="width:0%;"></div></div>
                 </div>
             </div>
             <div class="modal-actions">
@@ -542,6 +591,7 @@
 
         const CRYSTAL_NAMES = ['白水晶', '粉水晶', '黄水晶', '绿水晶', '紫水晶'];
         const CRYSTAL_COLORS = ['#e8eef5', '#f9b8d4', '#f5c542', '#7ed9c4', '#c8b0e8'];
+        const CRYSTAL_ICONS = ['💎', '🌸', '⭐', '🌿', '🔮'];
         const FORTUNE_KEYS = ['事业', '爱情', '财富', '健康', '综合'];
 
         const FORTUNE_DESCS = [
@@ -588,11 +638,11 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const fortuneGrid = document.getElementById('fortuneGrid');
-        const scoreDisplay = document.getElementById('scoreDisplay');
         const zodiacSelect = document.getElementById('zodiacSelect');
         const shareBtn = document.getElementById('shareBtn');
         const resetBtn = document.getElementById('resetBtn');
         const rotateBtn = document.getElementById('rotateBtn');
+        const rotateBadge = document.getElementById('rotateBadge');
         const rotateCountDisplay = document.getElementById('rotateCountDisplay');
         const bombBtn = document.getElementById('bombBtn');
         const bombCountDisplay = document.getElementById('bombCountDisplay');
@@ -609,9 +659,10 @@
         const toolEmptySub = document.getElementById('toolEmptySub');
         const watchAdBtn = document.getElementById('watchAdBtn');
         const closeToolEmptyBtn = document.getElementById('closeToolEmptyBtn');
-        const adWait = document.getElementById('adWait');
-        const adCountdown = document.getElementById('adCountdown');
-        const adTimer = document.getElementById('adTimer');
+        const adIdle = document.getElementById('adIdle');
+        const adPlaying = document.getElementById('adPlaying');
+        const adTimerDisplay = document.getElementById('adTimerDisplay');
+        const adProgressBar = document.getElementById('adProgressBar');
 
         // ============================================================
         // 3. 音频引擎
@@ -817,10 +868,12 @@
                     if (item) {
                         const valueEl = item.querySelector('.collect-count');
                         if (valueEl) {
-                            valueEl.style.transform = 'scale(1.4)';
+                            valueEl.classList.remove('pop');
+                            void valueEl.offsetWidth;
+                            valueEl.classList.add('pop');
                             setTimeout(() => {
-                                valueEl.style.transform = 'scale(1)';
-                            }, 300);
+                                valueEl.classList.remove('pop');
+                            }, 250);
                         }
                     }
                 }
@@ -868,24 +921,21 @@
         let fortuneValues = {};
         let gemCounts = {};
         let fortuneDescs = {};
-        let score = 0;
         let gameOver = false;
         let currentZodiac = '双子';
 
-        let task = { targetIndex: 0, targetCount: 3, currentCount: 0 };
+        let taskTargets = [0, 0, 0, 0, 0];
+        let taskCurrents = [0, 0, 0, 0, 0];
 
-        // 旋转相关
         let selectedPieceIndex = -1;
         let selectedPieceRotated = false;
         let rotateCount = 3;
         const MAX_ROTATE = 3;
 
-        // 炸弹相关
         let bombCount = 1;
         const MAX_BOMB = 1;
         let bombMode = false;
 
-        // 动画
         let animating = false;
         let animRows = [];
         let animCols = [];
@@ -896,7 +946,6 @@
         let pendingClearCols = [];
         let pendingCollectedGems = [];
 
-        // 拖拽
         let isDragging = false;
         let dragIndex = -1;
         let dragPiece = null;
@@ -906,13 +955,11 @@
         let mouseX = 0,
             mouseY = 0;
 
-        // 点击/拖拽区分
         let pendingSelectIndex = -1;
         let pendingSelectStartX = 0,
             pendingSelectStartY = 0;
         let isPendingSelect = false;
 
-        // 广告倒计时
         let adTimerInterval = null;
         let adPendingTool = null;
 
@@ -969,6 +1016,7 @@
                 }
                 selectedPieceIndex = -1;
                 selectedPieceRotated = false;
+                updateRotateBadge();
                 let hasPlaceable = false;
                 for (const p of availablePieces) {
                     if (p && canPlaceAnywhere(p.matrix)) {
@@ -1080,8 +1128,86 @@
             return newMatrix;
         }
 
+        function lightenColor(hex, percent) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, (num >> 16) + amt);
+            const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+            const B = Math.min(255, (num & 0x0000FF) + amt);
+            return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+        }
+
+        function darkenColor(hex, percent) {
+            const num = parseInt(hex.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, (num >> 16) - amt);
+            const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+            const B = Math.max(0, (num & 0x0000FF) - amt);
+            return `#${(1 << 24 | R << 16 | G << 8 | B).toString(16).slice(1)}`;
+        }
+
+        function drawGemShape(ctx, x, y, size, color) {
+            const grad = ctx.createRadialGradient(x - 2, y - 2, 1, x, y, size);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.3, color);
+            grad.addColorStop(1, color);
+            ctx.shadowColor = 'rgba(255,215,0,0.3)';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(x, y - size);
+            ctx.lineTo(x + size * 0.7, y);
+            ctx.lineTo(x, y + size);
+            ctx.lineTo(x - size * 0.7, y);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.beginPath();
+            ctx.arc(x - 2, y - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
         // ============================================================
-        // 7. 旋转与炸弹逻辑
+        // 7. 任务系统
+        // ============================================================
+        function generateTasks() {
+            for (let i = 0; i < FORTUNE_KEYS.length; i++) {
+                taskTargets[i] = Math.floor(Math.random() * 3) + 2;
+                taskCurrents[i] = 0;
+            }
+            updateFortuneDisplay();
+        }
+
+        function checkAllTasksComplete() {
+            for (let i = 0; i < FORTUNE_KEYS.length; i++) {
+                if (taskCurrents[i] < taskTargets[i]) return false;
+            }
+            return true;
+        }
+
+        function collectGem(typeIndex) {
+            if (typeIndex < 0 || typeIndex >= FORTUNE_KEYS.length) return;
+            if (taskCurrents[typeIndex] < taskTargets[typeIndex]) {
+                taskCurrents[typeIndex]++;
+                const key = FORTUNE_KEYS[typeIndex];
+                fortuneValues[key] = Math.min(100, fortuneValues[key] + 5);
+                updateFortuneDisplay();
+                if (checkAllTasksComplete()) {
+                    setTimeout(() => {
+                        generateTasks();
+                        FORTUNE_KEYS.forEach((k, idx) => {
+                            const descs = FORTUNE_DESCS[idx] || ['运势平稳'];
+                            fortuneDescs[k] = descs[Math.floor(Math.random() * descs.length)];
+                        });
+                        alert('🎉 所有水晶收集完成！运势全面提升！');
+                    }, 500);
+                }
+            }
+        }
+
+        // ============================================================
+        // 8. 旋转与炸弹逻辑
         // ============================================================
         function rotateSelectedPiece() {
             if (selectedPieceIndex === -1) {
@@ -1092,20 +1218,31 @@
             if (!piece) {
                 selectedPieceIndex = -1;
                 selectedPieceRotated = false;
+                updateRotateBadge();
                 return false;
             }
             if (rotateCount <= 0) {
                 openToolEmptyModal('rotate');
                 return false;
             }
+            // 如果当前选中的图形还没有消耗过旋转次数，则消耗一次
             if (!selectedPieceRotated) {
                 rotateCount--;
                 selectedPieceRotated = true;
+                updateRotateBadge();
                 updateToolUI();
             }
             piece.matrix = rotateMatrix(piece.matrix);
             draw();
             return true;
+        }
+
+        function updateRotateBadge() {
+            if (selectedPieceRotated && selectedPieceIndex !== -1) {
+                rotateBadge.style.display = 'inline';
+            } else {
+                rotateBadge.style.display = 'none';
+            }
         }
 
         function useBomb() {
@@ -1134,7 +1271,7 @@
         }
 
         // ============================================================
-        // 8. 工具UI更新 & 广告
+        // 9. 工具UI更新 & 广告模拟
         // ============================================================
         function updateToolUI() {
             rotateCountDisplay.textContent = `剩余 ${rotateCount} 次`;
@@ -1154,6 +1291,9 @@
                 toolEmptyTitle.textContent = '💣 炸弹次数已用完';
                 toolEmptySub.textContent = '观看广告可获得 1 次炸弹机会';
             }
+            // 重置广告UI
+            adIdle.style.display = 'block';
+            adPlaying.style.display = 'none';
             toolEmptyModal.classList.add('active');
         }
 
@@ -1161,20 +1301,27 @@
             toolEmptyModal.classList.remove('active');
             clearAdTimer();
             adPendingTool = null;
+            adIdle.style.display = 'block';
+            adPlaying.style.display = 'none';
         }
 
         function watchAdForTool() {
-            adWait.style.display = 'none';
-            adCountdown.style.display = 'block';
+            // 切换到播放状态
+            adIdle.style.display = 'none';
+            adPlaying.style.display = 'block';
             let count = 5;
-            adTimer.textContent = count;
+            adTimerDisplay.textContent = count;
+            adProgressBar.style.width = '0%';
+
             if (adTimerInterval) clearInterval(adTimerInterval);
             adTimerInterval = setInterval(() => {
                 count--;
-                adTimer.textContent = count;
+                adTimerDisplay.textContent = count;
+                adProgressBar.style.width = ((5 - count) / 5 * 100) + '%';
                 if (count <= 0) {
                     clearInterval(adTimerInterval);
                     adTimerInterval = null;
+                    // 发放奖励
                     if (adPendingTool === 'rotate') {
                         rotateCount += 3;
                     } else if (adPendingTool === 'bomb') {
@@ -1192,12 +1339,12 @@
                 clearInterval(adTimerInterval);
                 adTimerInterval = null;
             }
-            adWait.style.display = 'block';
-            adCountdown.style.display = 'none';
+            adIdle.style.display = 'block';
+            adPlaying.style.display = 'none';
         }
 
         // ============================================================
-        // 9. 消除动画
+        // 10. 消除动画
         // ============================================================
         function startEliminateAnimation(rows, cols, collectedGems) {
             playEliminateSound();
@@ -1269,17 +1416,9 @@
                     for (const gem of pendingCollectedGems) {
                         const idx = gem.typeIndex;
                         if (idx >= 0 && idx < FORTUNE_KEYS.length) {
-                            const key = FORTUNE_KEYS[idx];
-                            fortuneValues[key] = Math.min(100, fortuneValues[key] + 5);
-                            gemCounts[key] = (gemCounts[key] || 0) + 1;
-                            if (idx === task.targetIndex) {
-                                task.currentCount = Math.min(task.targetCount, task.currentCount + 1);
-                                updateTaskUI();
-                            }
+                            collectGem(idx);
                         }
                     }
-                    updateFortuneDisplay();
-                    updateScore();
                     particles = [];
                     draw();
                     animTimer = null;
@@ -1337,8 +1476,6 @@
                     }
                     return true;
                 });
-                const lines = rowsToClear.length + colsToClear.length;
-                score += lines * 10;
                 startEliminateAnimation(rowsToClear, colsToClear, collectedGems);
             } else {
                 playPlaceSound();
@@ -1350,6 +1487,7 @@
                 if (selectedPieceIndex === dragIndex) {
                     selectedPieceIndex = -1;
                     selectedPieceRotated = false;
+                    updateRotateBadge();
                 }
             }
             fillAvailable();
@@ -1358,19 +1496,8 @@
             return true;
         }
 
-        function generateTask() {
-            const idx = Math.floor(Math.random() * CRYSTAL_NAMES.length);
-            const count = Math.floor(Math.random() * 3) + 2;
-            task.targetIndex = idx;
-            task.targetCount = count;
-            task.currentCount = 0;
-            updateTaskUI();
-        }
-
-        function updateTaskUI() {}
-
         // ============================================================
-        // 10. 绘制
+        // 11. 绘制（含预览灰色/绿色）
         // ============================================================
         function draw() {
             ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
@@ -1408,22 +1535,36 @@
                             ctx.fillStyle = '#ffffff';
                             ctx.shadowColor = 'rgba(255,255,255,0.6)';
                             ctx.shadowBlur = 20 * (1 - animProgress);
-                            ctx.fillRect(x + offset, y + offset, CELL_SIZE * scale, CELL_SIZE * scale);
+                            ctx.beginPath();
+                            ctx.roundRect(x + offset, y + offset, CELL_SIZE * scale, CELL_SIZE * scale, 6);
+                            ctx.fill();
                             ctx.shadowBlur = 0;
                             ctx.globalAlpha = 1;
-                            ctx.fillStyle = color;
+                            const grad = ctx.createLinearGradient(x, y, x + CELL_SIZE, y + CELL_SIZE);
+                            grad.addColorStop(0, lightenColor(color, 20));
+                            grad.addColorStop(1, darkenColor(color, 20));
+                            ctx.fillStyle = grad;
                             ctx.shadowColor = 'rgba(0,0,0,0.05)';
                             ctx.shadowBlur = 4;
-                            ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                            ctx.beginPath();
+                            ctx.roundRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, 4);
+                            ctx.fill();
                             ctx.shadowBlur = 0;
                         } else {
-                            ctx.fillStyle = color;
+                            const grad = ctx.createLinearGradient(x, y, x + CELL_SIZE, y + CELL_SIZE);
+                            grad.addColorStop(0, lightenColor(color, 20));
+                            grad.addColorStop(1, darkenColor(color, 20));
+                            ctx.fillStyle = grad;
                             ctx.shadowColor = 'rgba(0,0,0,0.05)';
                             ctx.shadowBlur = 4;
-                            ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                            ctx.beginPath();
+                            ctx.roundRect(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, 4);
+                            ctx.fill();
                             ctx.shadowBlur = 0;
-                            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                            ctx.fillRect(x + 2, y + 2, CELL_SIZE - 4, 4);
+                            ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                            ctx.beginPath();
+                            ctx.roundRect(x + 4, y + 4, CELL_SIZE - 8, 3, 2);
+                            ctx.fill();
                         }
                     }
                 }
@@ -1436,30 +1577,8 @@
                 const color = CRYSTAL_COLORS[gem.typeIndex] || '#f5c542';
                 const cx = x + CELL_SIZE / 2,
                     cy = y + CELL_SIZE / 2;
-                const size = CELL_SIZE * 0.42;
-                const grad = ctx.createRadialGradient(cx - 4, cy - 4, 2, cx, cy, size);
-                grad.addColorStop(0, '#ffffff');
-                grad.addColorStop(0.3, color);
-                grad.addColorStop(1, color);
-                ctx.shadowColor = 'rgba(200,180,160,0.4)';
-                ctx.shadowBlur = 12;
-                ctx.beginPath();
-                ctx.moveTo(cx, cy - size);
-                ctx.lineTo(cx + size * 0.7, cy);
-                ctx.lineTo(cx, cy + size);
-                ctx.lineTo(cx - size * 0.7, cy);
-                ctx.closePath();
-                ctx.fillStyle = grad;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                ctx.beginPath();
-                ctx.arc(cx - 4, cy - 4, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                ctx.beginPath();
-                ctx.arc(cx + 3, cy - 2, 2, 0, Math.PI * 2);
-                ctx.fill();
+                const size = CELL_SIZE * 0.38;
+                drawGemShape(ctx, cx, cy, size, color);
             }
 
             // 粒子
@@ -1492,20 +1611,19 @@
                 ctx.fillText('💣 炸弹模式', 10, 40);
             }
 
-            // 预览 + 高亮
+            // ---- 预览（可放置绿色，不可放置灰色） ----
             if (isDragging && dragPiece && previewRow >= 0 && previewCol >= 0) {
                 const matrix = dragPiece.matrix;
-                const valid = canPlace(matrix, previewRow, previewCol);
-
+                const valid = previewValid;
                 ctx.globalAlpha = 0.35;
                 for (let r = 0; r < matrix.length; r++) {
                     for (let c = 0; c < matrix[0].length; c++) {
                         if (matrix[r][c] !== 0) {
                             const x = (previewCol + c) * CELL_SIZE;
                             const y = (previewRow + r) * CELL_SIZE;
-                            ctx.fillStyle = valid ? 'rgba(100, 200, 100, 0.25)' : 'rgba(255, 100, 100, 0.25)';
+                            ctx.fillStyle = valid ? 'rgba(100, 220, 100, 0.4)' : 'rgba(180, 180, 180, 0.4)';
                             ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
-                            ctx.strokeStyle = valid ? 'rgba(80, 180, 80, 0.6)' : 'rgba(255, 80, 80, 0.6)';
+                            ctx.strokeStyle = valid ? 'rgba(80, 200, 80, 0.7)' : 'rgba(150, 150, 150, 0.7)';
                             ctx.lineWidth = 2;
                             ctx.setLineDash([4, 4]);
                             ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
@@ -1536,7 +1654,7 @@
                         }
                         if (full) colsToClear.push(c);
                     }
-                    ctx.globalAlpha = 0.30;
+                    ctx.globalAlpha = 0.25;
                     for (const r of rowsToClear) {
                         ctx.fillStyle = '#f5c542';
                         ctx.fillRect(0, r * CELL_SIZE, CANVAS_W, CELL_SIZE);
@@ -1561,7 +1679,7 @@
                 }
             }
 
-            // 底部备选
+            // ---- 底部备选 ----
             ctx.fillStyle = '#f0e8e0';
             ctx.fillRect(0, BOTTOM_AREA_Y, CANVAS_W, BOTTOM_AREA_H);
             ctx.fillStyle = 'rgba(0,0,0,0.02)';
@@ -1596,6 +1714,15 @@
                         ctx.shadowBlur = 0;
                     }
                     drawPieceInRect(ctx, p.matrix, p.color, x, y, pieceWidth, pieceHeight);
+                    // 在备选方块中心绘制水晶
+                    const cx = x + pieceWidth / 2;
+                    const cy = y + pieceHeight / 2;
+                    const gemSize = 12;
+                    let taskIdx = 0;
+                    for (let j = 0; j < FORTUNE_KEYS.length; j++) {
+                        if (taskCurrents[j] < taskTargets[j]) { taskIdx = j; break; }
+                    }
+                    drawGemShape(ctx, cx, cy, gemSize, CRYSTAL_COLORS[taskIdx]);
                     ctx.globalAlpha = 1.0;
                 } else {
                     ctx.fillStyle = 'rgba(255,255,255,0.1)';
@@ -1605,30 +1732,33 @@
                 }
             }
 
-            // 跟随方块
-            if (isDragging && dragPiece) {
+            // ---- 跟随方块（半透明，吸附到预览位置） ----
+            if (isDragging && dragPiece && previewRow >= 0 && previewCol >= 0) {
                 const matrix = dragPiece.matrix;
                 const color = dragPiece.color;
-                const rows = matrix.length,
-                    cols = matrix[0].length;
                 const blockSize = CELL_SIZE;
-                const totalW = cols * blockSize;
-                const totalH = rows * blockSize;
-                const drawX = mouseX - totalW / 2;
-                const drawY = mouseY - totalH / 2;
+                const drawX = previewCol * CELL_SIZE;
+                const drawY = previewRow * CELL_SIZE;
                 ctx.globalAlpha = 0.85;
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
+                for (let r = 0; r < matrix.length; r++) {
+                    for (let c = 0; c < matrix[0].length; c++) {
                         if (matrix[r][c] !== 0) {
                             const px = drawX + c * blockSize;
                             const py = drawY + r * blockSize;
-                            ctx.fillStyle = color;
-                            ctx.shadowColor = 'rgba(255,255,255,0.4)';
-                            ctx.shadowBlur = 20;
-                            ctx.fillRect(px, py, blockSize - 2, blockSize - 2);
+                            const grad = ctx.createLinearGradient(px, py, px + blockSize, py + blockSize);
+                            grad.addColorStop(0, lightenColor(color, 20));
+                            grad.addColorStop(1, darkenColor(color, 20));
+                            ctx.fillStyle = grad;
+                            ctx.shadowColor = 'rgba(255,255,255,0.3)';
+                            ctx.shadowBlur = 16;
+                            ctx.beginPath();
+                            ctx.roundRect(px, py, blockSize - 2, blockSize - 2, 4);
+                            ctx.fill();
                             ctx.shadowBlur = 0;
                             ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                            ctx.fillRect(px + 2, py + 2, blockSize - 6, 2);
+                            ctx.beginPath();
+                            ctx.roundRect(px + 3, py + 3, blockSize - 8, 3, 2);
+                            ctx.fill();
                         }
                     }
                 }
@@ -1650,13 +1780,20 @@
                     if (matrix[r][c] !== 0) {
                         const px = startX + c * cellSize;
                         const py = startY + r * cellSize;
-                        ctx.fillStyle = color;
+                        const grad = ctx.createLinearGradient(px, py, px + cellSize, py + cellSize);
+                        grad.addColorStop(0, lightenColor(color, 20));
+                        grad.addColorStop(1, darkenColor(color, 20));
+                        ctx.fillStyle = grad;
                         ctx.shadowColor = 'rgba(0,0,0,0.05)';
                         ctx.shadowBlur = 4;
-                        ctx.fillRect(px + 1, py + 1, cellSize - 2, cellSize - 2);
+                        ctx.beginPath();
+                        ctx.roundRect(px + 1, py + 1, cellSize - 2, cellSize - 2, 4);
+                        ctx.fill();
                         ctx.shadowBlur = 0;
-                        ctx.fillStyle = 'rgba(255,255,255,0.15)';
-                        ctx.fillRect(px + 2, py + 2, cellSize - 4, 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                        ctx.beginPath();
+                        ctx.roundRect(px + 3, py + 3, cellSize - 6, 2, 2);
+                        ctx.fill();
                     }
                 }
             }
@@ -1681,28 +1818,24 @@
         }
 
         // ============================================================
-        // 11. UI更新
+        // 12. UI更新（显示剩余数量）
         // ============================================================
         function updateFortuneDisplay() {
             fortuneGrid.innerHTML = '';
             FORTUNE_KEYS.forEach((key, idx) => {
-                const count = task.targetCount;
+                const remaining = Math.max(0, taskTargets[idx] - taskCurrents[idx]);
                 const div = document.createElement('div');
                 div.className = 'fortune-card';
                 div.innerHTML = `
                     <span class="crystal-name">${CRYSTAL_NAMES[idx]}</span>
-                    <span class="collect-count">× ${count}</span>
+                    <span class="collect-count">× ${remaining}</span>
                 `;
                 fortuneGrid.appendChild(div);
             });
         }
 
-        function updateScore() {
-            scoreDisplay.textContent = score;
-        }
-
         // ============================================================
-        // 12. 游戏逻辑
+        // 13. 游戏逻辑
         // ============================================================
         function initBoard() {
             board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(null));
@@ -1715,7 +1848,7 @@
                 const descs = FORTUNE_DESCS[idx] || ['运势平稳'];
                 fortuneDescs[key] = descs[Math.floor(Math.random() * descs.length)];
             });
-            updateFortuneDisplay();
+            generateTasks();
         }
 
         function resetGame() {
@@ -1731,7 +1864,6 @@
             clearAdTimer();
             initBoard();
             gems = [];
-            score = 0;
             gameOver = false;
             availablePieces = [null, null, null];
             rotateCount = MAX_ROTATE;
@@ -1742,9 +1874,8 @@
             bombBtn.classList.remove('active');
             fillAvailable();
             initFortune();
-            generateTask();
-            updateScore();
             updateToolUI();
+            updateRotateBadge();
             isDragging = false;
             dragIndex = -1;
             dragPiece = null;
@@ -1756,14 +1887,13 @@
         }
 
         // ============================================================
-        // 13. 交互事件（修复移动端松手问题）
+        // 14. 交互事件
         // ============================================================
         function getCanvasCoords(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             let clientX, clientY;
-            // 优先使用 changedTouches（适用于 touchend）
             if (e.changedTouches && e.changedTouches.length > 0) {
                 clientX = e.changedTouches[0].clientX;
                 clientY = e.changedTouches[0].clientY;
@@ -1798,15 +1928,11 @@
         }
 
         let isPointerDown = false;
-        let pointerDownX = 0,
-            pointerDownY = 0;
         let pointerDownIdx = -1;
 
         function onPointerDown(e) {
             if (gameOver || animating) return;
             const pos = getCanvasCoords(e);
-            pointerDownX = pos.x;
-            pointerDownY = pos.y;
             isPointerDown = true;
 
             if (bombMode) {
@@ -1830,6 +1956,7 @@
                 isPendingSelect = false;
                 selectedPieceIndex = -1;
                 selectedPieceRotated = false;
+                updateRotateBadge();
                 draw();
             }
         }
@@ -1862,6 +1989,7 @@
                         if (selectedPieceIndex !== -1) {
                             selectedPieceIndex = -1;
                             selectedPieceRotated = false;
+                            updateRotateBadge();
                         }
                         calcPreview(mouseX, mouseY);
                         draw();
@@ -1876,7 +2004,6 @@
             mouseY = pos.y;
 
             if (isDragging) {
-                // 松手时重新计算一次预览，确保位置准确
                 if (dragPiece) {
                     calcPreview(mouseX, mouseY);
                 }
@@ -1908,6 +2035,7 @@
                         selectedPieceIndex = pointerDownIdx;
                         selectedPieceRotated = false;
                     }
+                    updateRotateBadge();
                     draw();
                 }
             }
@@ -1964,32 +2092,30 @@
         });
 
         function calcPreview(mx, my) {
-            if (my < BOARD_HEIGHT && mx >= 0 && mx < CANVAS_W) {
-                const col = Math.floor(mx / CELL_SIZE);
-                const row = Math.floor(my / CELL_SIZE);
-                if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
-                    if (dragPiece) {
-                        const matrix = dragPiece.matrix;
-                        let r = row,
-                            c = col;
-                        if (c + matrix[0].length > BOARD_SIZE) c = BOARD_SIZE - matrix[0].length;
-                        if (r + matrix.length > BOARD_SIZE) r = BOARD_SIZE - matrix.length;
-                        if (c < 0) c = 0;
-                        if (r < 0) r = 0;
-                        previewRow = r;
-                        previewCol = c;
-                        previewValid = canPlace(matrix, r, c);
-                        return;
-                    }
-                }
+            if (my < BOARD_HEIGHT && mx >= 0 && mx < CANVAS_W && dragPiece) {
+                const matrix = dragPiece.matrix;
+                const rows = matrix.length;
+                const cols = matrix[0].length;
+                let col = Math.floor(mx / CELL_SIZE);
+                let row = Math.floor(my / CELL_SIZE);
+                let offsetCol = Math.floor(cols / 2);
+                let offsetRow = Math.floor(rows / 2);
+                let candidateCol = col - offsetCol;
+                let candidateRow = row - offsetRow;
+                candidateCol = Math.max(0, Math.min(candidateCol, BOARD_SIZE - cols));
+                candidateRow = Math.max(0, Math.min(candidateRow, BOARD_SIZE - rows));
+                previewRow = candidateRow;
+                previewCol = candidateCol;
+                previewValid = canPlace(matrix, candidateRow, candidateCol);
+            } else {
+                previewRow = -1;
+                previewCol = -1;
+                previewValid = false;
             }
-            previewRow = -1;
-            previewCol = -1;
-            previewValid = false;
         }
 
         // ============================================================
-        // 14. 按钮事件
+        // 15. 按钮事件
         // ============================================================
         rotateBtn.addEventListener('click', () => {
             rotateSelectedPiece();
@@ -2008,19 +2134,26 @@
         });
 
         // ============================================================
-        // 15. 今日运势模态框
+        // 16. 今日运势模态框
         // ============================================================
         function openShareModal() {
             const zodiac = zodiacSelect.value;
             modalTitle.textContent = `✨ ${zodiac}座 今日运势`;
-            const taskName = CRYSTAL_NAMES[task.targetIndex];
-            modalSub.innerHTML = `今日任务：收集 <strong>${task.targetCount}</strong> 个 <strong>${taskName}</strong> · 星运消除师`;
+            let taskStr = '';
+            FORTUNE_KEYS.forEach((key, idx) => {
+                const remaining = Math.max(0, taskTargets[idx] - taskCurrents[idx]);
+                if (remaining > 0) {
+                    taskStr += `${CRYSTAL_NAMES[idx]} ×${remaining} `;
+                }
+            });
+            if (taskStr === '') taskStr = '🎉 全部完成！';
+            modalSub.innerHTML = `今日任务：${taskStr} · 星运消除师`;
             modalList.innerHTML = '';
             FORTUNE_KEYS.forEach((key, idx) => {
                 const val = Math.round(fortuneValues[key] || 0);
                 const desc = fortuneDescs[key] || '运势平稳';
-                const count = task.targetCount;
-                const upgrade = `收集 ${count} 个 ${CRYSTAL_NAMES[idx]}`;
+                const remaining = Math.max(0, taskTargets[idx] - taskCurrents[idx]);
+                const upgrade = `还需收集 ${remaining} 个 ${CRYSTAL_NAMES[idx]}`;
                 const starCount = Math.min(5, Math.floor(val / 20));
                 const starsHtml = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
                 const li = document.createElement('li');
@@ -2048,12 +2181,12 @@
                 const starCount = Math.min(5, Math.floor(val / 20));
                 const stars = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
                 const desc = fortuneDescs[key] || '';
-                const count = task.targetCount;
-                const upgrade = `收集${count}个${CRYSTAL_NAMES[idx]}`;
+                const remaining = Math.max(0, taskTargets[idx] - taskCurrents[idx]);
+                const upgrade = `还需收集${remaining}个${CRYSTAL_NAMES[idx]}`;
                 return `${CRYSTAL_NAMES[idx]}(${key}): ${stars} — ${desc} (${upgrade})`;
             });
             const msg =
-                `✨ 星运消除师 · ${zodiac}座 今日运势\n今日任务：收集 ${task.targetCount} 个 ${CRYSTAL_NAMES[task.targetIndex]}\n${lines.join('\n')}\n#星运消除师`;
+                `✨ 星运消除师 · ${zodiac}座 今日运势\n${lines.join('\n')}\n#星运消除师`;
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(msg).then(() => {
                     alert('📋 运势已复制，快去分享吧！');
@@ -2087,7 +2220,7 @@
         });
 
         // ============================================================
-        // 16. 星座切换
+        // 17. 星座切换
         // ============================================================
         zodiacSelect.addEventListener('change', () => {
             currentZodiac = zodiacSelect.value;
@@ -2096,25 +2229,22 @@
                 const descs = FORTUNE_DESCS[idx] || ['运势平稳'];
                 fortuneDescs[key] = descs[Math.floor(Math.random() * descs.length)];
             });
-            updateFortuneDisplay();
-            generateTask();
+            generateTasks();
             draw();
         });
 
         // ============================================================
-        // 17. 重置 & 下一局
+        // 18. 重置 & 下一局
         // ============================================================
         resetBtn.addEventListener('click', resetGame);
         restartGameBtn.addEventListener('click', resetGame);
 
         // ============================================================
-        // 18. 启动
+        // 19. 启动
         // ============================================================
         function startGame() {
             initBoard();
             initFortune();
-            score = 0;
-            updateScore();
             availablePieces = [null, null, null];
             rotateCount = MAX_ROTATE;
             bombCount = MAX_BOMB;
@@ -2123,8 +2253,8 @@
             fillAvailable();
             gems = [];
             gameOver = false;
-            generateTask();
             updateToolUI();
+            updateRotateBadge();
             draw();
             currentZodiac = zodiacSelect.value;
         }
