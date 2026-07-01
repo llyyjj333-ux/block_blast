@@ -510,7 +510,7 @@
         </div>
     </div>
 
-    <!-- 道具用尽模态框（旋转/炸弹） -->
+    <!-- 道具用尽模态框 -->
     <div class="modal-overlay" id="toolEmptyModal">
         <div class="modal-box">
             <h2 id="toolEmptyTitle">🔄 旋转次数已用完</h2>
@@ -735,7 +735,6 @@
             try {
                 initAudio();
                 const now = audioCtx.currentTime;
-                // 低沉爆炸音
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'sawtooth';
@@ -877,14 +876,14 @@
 
         // 旋转相关
         let selectedPieceIndex = -1;
-        let selectedPieceRotated = false; // 当前选中的图形是否已消耗过旋转次数
+        let selectedPieceRotated = false;
         let rotateCount = 3;
         const MAX_ROTATE = 3;
 
         // 炸弹相关
         let bombCount = 1;
         const MAX_BOMB = 1;
-        let bombMode = false; // 是否进入炸弹模式
+        let bombMode = false;
 
         // 动画
         let animating = false;
@@ -915,7 +914,7 @@
 
         // 广告倒计时
         let adTimerInterval = null;
-        let adPendingTool = null; // 'rotate' 或 'bomb'
+        let adPendingTool = null;
 
         // ============================================================
         // 6. 辅助函数
@@ -968,7 +967,6 @@
                 for (let i = 0; i < 3; i++) {
                     availablePieces[i] = generatePlaceablePiece();
                 }
-                // 重置选中状态
                 selectedPieceIndex = -1;
                 selectedPieceRotated = false;
                 let hasPlaceable = false;
@@ -1069,7 +1067,6 @@
             return newParticles;
         }
 
-        // 矩阵旋转90度顺时针
         function rotateMatrix(matrix) {
             const rows = matrix.length;
             const cols = matrix[0].length;
@@ -1097,18 +1094,15 @@
                 selectedPieceRotated = false;
                 return false;
             }
-            // 检查旋转次数
             if (rotateCount <= 0) {
                 openToolEmptyModal('rotate');
                 return false;
             }
-            // 如果当前选中的图形还没有消耗过旋转次数，则消耗一次
             if (!selectedPieceRotated) {
                 rotateCount--;
                 selectedPieceRotated = true;
                 updateToolUI();
             }
-            // 执行旋转
             piece.matrix = rotateMatrix(piece.matrix);
             draw();
             return true;
@@ -1119,10 +1113,8 @@
                 openToolEmptyModal('bomb');
                 return;
             }
-            // 进入炸弹模式
             bombMode = true;
             bombBtn.classList.add('active');
-            // 提示用户点击棋盘
             alert('💣 炸弹模式已开启，点击棋盘上的一个方块将其消除。');
         }
 
@@ -1131,7 +1123,6 @@
                 alert('该位置没有方块！');
                 return;
             }
-            // 消除该格子
             board[row][col] = null;
             bombCount--;
             bombMode = false;
@@ -1139,7 +1130,6 @@
             playBombSound();
             updateToolUI();
             draw();
-            // 检查游戏是否结束（可能需要补填备选）
             fillAvailable();
         }
 
@@ -1185,7 +1175,6 @@
                 if (count <= 0) {
                     clearInterval(adTimerInterval);
                     adTimerInterval = null;
-                    // 发放奖励
                     if (adPendingTool === 'rotate') {
                         rotateCount += 3;
                     } else if (adPendingTool === 'bomb') {
@@ -1356,7 +1345,6 @@
                 draw();
             }
 
-            // 将使用掉的备选置为 null
             if (dragIndex >= 0 && dragIndex < 3) {
                 availablePieces[dragIndex] = null;
                 if (selectedPieceIndex === dragIndex) {
@@ -1490,7 +1478,7 @@
             // 飞行宝石
             drawFlyingGems();
 
-            // ---- 炸弹模式指示 ----
+            // 炸弹模式指示
             if (bombMode) {
                 ctx.fillStyle = 'rgba(255,0,0,0.05)';
                 ctx.fillRect(0, 0, CANVAS_W, BOARD_HEIGHT);
@@ -1504,7 +1492,7 @@
                 ctx.fillText('💣 炸弹模式', 10, 40);
             }
 
-            // ---- 预览 + 高亮 ----
+            // 预览 + 高亮
             if (isDragging && dragPiece && previewRow >= 0 && previewCol >= 0) {
                 const matrix = dragPiece.matrix;
                 const valid = canPlace(matrix, previewRow, previewCol);
@@ -1573,7 +1561,7 @@
                 }
             }
 
-            // ---- 底部备选 ----
+            // 底部备选
             ctx.fillStyle = '#f0e8e0';
             ctx.fillRect(0, BOTTOM_AREA_Y, CANVAS_W, BOTTOM_AREA_H);
             ctx.fillStyle = 'rgba(0,0,0,0.02)';
@@ -1617,7 +1605,7 @@
                 }
             }
 
-            // ---- 跟随方块 ----
+            // 跟随方块
             if (isDragging && dragPiece) {
                 const matrix = dragPiece.matrix;
                 const color = dragPiece.color;
@@ -1768,17 +1756,20 @@
         }
 
         // ============================================================
-        // 13. 交互事件
+        // 13. 交互事件（修复移动端松手问题）
         // ============================================================
         function getCanvasCoords(e) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
             let clientX, clientY;
-            if (e.touches) {
+            // 优先使用 changedTouches（适用于 touchend）
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
+            } else if (e.touches && e.touches.length > 0) {
                 clientX = e.touches[0].clientX;
                 clientY = e.touches[0].clientY;
-                e.preventDefault();
             } else {
                 clientX = e.clientX;
                 clientY = e.clientY;
@@ -1818,7 +1809,6 @@
             pointerDownY = pos.y;
             isPointerDown = true;
 
-            // 如果炸弹模式激活，点击棋盘执行炸弹
             if (bombMode) {
                 const row = Math.floor(pos.y / CELL_SIZE);
                 const col = Math.floor(pos.x / CELL_SIZE);
@@ -1828,7 +1818,6 @@
                 return;
             }
 
-            // 检测是否点击到备选图形
             const idx = hitTestPiece(pos.x, pos.y);
             if (idx >= 0) {
                 pointerDownIdx = idx;
@@ -1839,7 +1828,6 @@
             } else {
                 pointerDownIdx = -1;
                 isPendingSelect = false;
-                // 点击空白区域取消选中
                 selectedPieceIndex = -1;
                 selectedPieceRotated = false;
                 draw();
@@ -1888,6 +1876,10 @@
             mouseY = pos.y;
 
             if (isDragging) {
+                // 松手时重新计算一次预览，确保位置准确
+                if (dragPiece) {
+                    calcPreview(mouseX, mouseY);
+                }
                 if (dragPiece && previewRow >= 0 && previewCol >= 0 && previewValid) {
                     const matrix = dragPiece.matrix;
                     const color = dragPiece.color;
@@ -1909,13 +1901,12 @@
             if (isPendingSelect && pointerDownIdx >= 0) {
                 const dist = Math.sqrt(Math.pow(pos.x - pendingSelectStartX, 2) + Math.pow(pos.y - pendingSelectStartY, 2));
                 if (dist < 8) {
-                    // 点击切换选中状态
                     if (selectedPieceIndex === pointerDownIdx) {
                         selectedPieceIndex = -1;
                         selectedPieceRotated = false;
                     } else {
                         selectedPieceIndex = pointerDownIdx;
-                        selectedPieceRotated = false; // 新选中，重置消耗标记
+                        selectedPieceRotated = false;
                     }
                     draw();
                 }
